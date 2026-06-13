@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Shaxmat</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+    <style>
+
+        body { background: #262421; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; font-family: sans-serif; }
+
+        #status { color: red; font-weight: bold; height: 25px; }
+
+        #turn { margin: 10px; font-weight: bold; }
+
+        .board { display: grid; grid-template-columns: repeat(8, 45px); border: 2px solid #555; }
+
+        .cell { width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; position: relative; }
+
+        
+
+        /* Siz yuborgan rasmdagi yashil ranglar sxemasi */
+
+        .light { background: #e3dec6; color: black; }
+
+        .dark { background: #829769; color: black; }
+
+        
+
+        .dot { width: 12px; height: 12px; background-color: rgba(0,0,0,0.3); border-radius: 50%; position: absolute; }
+
+        button { margin-top: 20px; padding: 10px 20px; font-size: 16px; cursor: pointer; background: #fff; color: black; border: none; border-radius: 5px; }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div id="status"></div>
+
+    <div id="turn">NAVBAT: OQLAR</div>
+
+    <div id="board" class="board"></div>
+
+    <button onclick="resetGame()">YANGI O'YIN</button>
+
+
+
+    <script>
+
+        let game = new Chess();
+
+        const boardEl = document.getElementById('board');
+
+        const statusEl = document.getElementById('status');
+
+        const turnEl = document.getElementById('turn');
+
+        let fromSquare = null;
+
+
+
+        function getSymbol(p) {
+
+            const sym = {w:{p:'♙',r:'♖',n:'♘',b:'♗',q:'♕',k:'♔'}, b:{p:'♟',r:'♜',n:'♞',b:'♝',q:'♛',k:'♚'}};
+
+            return sym[p.color][p.type];
+
+        }
+
+
+
+        function resetGame() { game = new Chess(); fromSquare = null; renderBoard(); }
+
+
+
+        function renderBoard() {
+
+            boardEl.innerHTML = '';
+
+            turnEl.innerText = game.turn() === 'w' ? "NAVBAT: OQLAR" : "NAVBAT: QORALAR";
+
+            statusEl.innerText = game.in_check() ? "SHAX!" : "";
+
+
+
+            game.board().forEach((row, rowIndex) => {
+
+                row.forEach((piece, colIndex) => {
+
+                    const square = String.fromCharCode(97 + colIndex) + (8 - rowIndex);
+
+                    const cell = document.createElement('div');
+
+                    cell.className = 'cell ' + ((rowIndex + colIndex) % 2 === 0 ? 'light' : 'dark');
+
+                    cell.innerText = piece ? getSymbol(piece) : '';
+
+                    
+
+                    if (fromSquare) {
+
+                        const moves = game.moves({ square: fromSquare, verbose: true });
+
+                        if (moves.some(m => m.to === square)) {
+
+                            const dot = document.createElement('div');
+
+                            dot.className = 'dot';
+
+                            cell.appendChild(dot);
+
+                        }
+
+                    }
+
+                    cell.onclick = () => {
+
+                        if (!fromSquare) {
+
+                            if (piece && piece.color === game.turn()) { fromSquare = square; renderBoard(); }
+
+                        } else {
+
+                            if (game.move({ from: fromSquare, to: square, promotion: 'q' })) { fromSquare = null; renderBoard(); }
+
+                            else { fromSquare = (piece && piece.color === game.turn()) ? square : null; renderBoard(); }
+
+                        }
+
+                    };
+
+                    boardEl.appendChild(cell);
+
+                });
+
+            });
+
+        }
+
+        renderBoard();
+
+    </script>
+
+</body>
+
+</html>
